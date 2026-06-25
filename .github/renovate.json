@@ -1,0 +1,20 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:best-practices"],
+  "prConcurrentLimit": 5,
+  "prHourlyLimit": 2,
+  "semanticCommits": "enabled",
+  "semanticCommitType": "chore",
+  "semanticCommitScope": "deps",
+  "vulnerabilityAlerts": {
+    "enabled": true
+  },
+  "minimumReleaseAge": "3 days",
+  "packageRules": [
+    {
+      "description": "Auto-merge GitHub Actions updates",
+      "matchManagers": ["github-actions"],
+      "automerge": true
+    }
+  ]
+}
