@@ -45,4 +45,4 @@ git clone https://github.com/xlionjuan/subagent-output-guide.git \
 hermes plugins enable subagent-output-guide
 ```
 
-Takes effect on the next session (`/reset` or restart Hermes).
+Takes effect after a gateway restart (`/restart` or restart the Hermes gateway service).

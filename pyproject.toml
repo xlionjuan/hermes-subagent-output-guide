@@ -2,18 +2,7 @@
 name = "subagent-output-guide"
 version = "0.1.0"
 description = "Injects output-location guidance into subagent prompts"
-authors = [{ name = "XLion / Kuri" }]
 requires-python = ">=3.12"
-dependencies = []
-dynamic = []
-classifiers = ["Private :: Do Not Upload"]
-
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
-[tool.hatch.build]
-packages = ["."]
 
 [tool.ruff]
 line-length = 100
