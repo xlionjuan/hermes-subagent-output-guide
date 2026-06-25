@@ -1,0 +1,7 @@
+name: subagent-output-guide
+version: 0.1.0
+description: "Injects output-location guidance into subagent prompts — if the task doesn't specify where files go, write to /tmp/. Uses subagent_start + pre_llm_call hooks to detect child sessions and inject context into their first turn."
+author: "XLion / 玖璃"
+hooks:
+  - subagent_start
+  - pre_llm_call
