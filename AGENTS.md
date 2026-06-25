@@ -38,7 +38,7 @@ Or via just:
 ## Structure
 
 ```
-~/.hermes/plugins/subagent-output-guide/
+~/.hermes/plugins/hermes-subagent-output-guide/
 ├── plugin.yaml          # Plugin manifest (name, version, hooks)
 ├── __init__.py          # Plugin entry — register() + hook callbacks
 ├── AGENTS.md            # This file

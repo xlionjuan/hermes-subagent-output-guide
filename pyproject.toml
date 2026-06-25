@@ -1,5 +1,5 @@
 [project]
-name = "subagent-output-guide"
+name = "hermes-subagent-output-guide"
 version = "0.1.0"
 description = "Injects output-location guidance into subagent prompts"
 requires-python = ">=3.12"
