@@ -48,6 +48,16 @@ def _on_subagent_start(
         )
 
 
+def _on_session_end(
+    session_id: str = "",
+    **_: Any,
+) -> None:
+    """Clean up child session tracking when a session ends."""
+    if session_id:
+        with _lock:
+            _child_sessions.discard(session_id)
+
+
 def _on_pre_llm_call(
     session_id: str = "",
     is_first_turn: bool = False,
@@ -102,4 +112,5 @@ def _on_pre_llm_call(
 
 def register(ctx) -> None:
     ctx.register_hook("subagent_start", _on_subagent_start)
+    ctx.register_hook("on_session_end", _on_session_end)
     ctx.register_hook("pre_llm_call", _on_pre_llm_call)

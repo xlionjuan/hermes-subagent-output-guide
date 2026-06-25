@@ -16,7 +16,6 @@ def _load_plugin(module_name: str):
     assert spec is not None and spec.loader is not None
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
-    mod._child_sessions.clear()
     return mod
 
 
