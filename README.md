@@ -11,9 +11,21 @@ On every subagent's first LLM call, the following block is appended to its user 
 ```
 <subagent-output-guide>
 
-## Output Location Constraint
+## File Output Location
 
-...
+This guidance only applies if your delegated task requires you
+to create output files. It does not require you to create a
+file. If the task can be completed by replying in chat, reply
+in chat.
+
+If you do create output files:
+
+- If the task **explicitly specifies** an output location, use
+  that location.
+- If **no output location is specified**, write output files
+  to ``/tmp/``.
+- Do not write output files to the home directory, project
+  root, or other locations unless explicitly directed.
 
 </subagent-output-guide>
 ```
