@@ -2,7 +2,7 @@
 
 A Hermes user plugin that automatically injects output-location guidance into
 subagent prompts, preventing subagents from writing files to arbitrary locations
-when the parent agent (玖璃) forgets to specify an output path.
+when the parent agent (Kuri) forgets to specify an output path.
 
 ## How it works
 
@@ -18,17 +18,22 @@ Two hooks working together:
 - pytest (all tests under tests/)
 - ruff (linting + formatting)
 - `ty` (static type checking)
+- bandit (security scan)
+- vulture (dead code detection)
 
 Run before every commit:
 
     uv run ruff check .
     uv run ruff format --check .
-    uv run ty src/ tests/
+    uv run bandit -r . -c pyproject.toml
+    uv run vulture . --exclude '.venv,dist,.git,__pycache__'
+    uv run ty check .
     uv run pytest
 
 Or via just:
 
-    just verify
+    just verify     # Full suite
+    just clean      # Remove __pycache__ and .pyc files
 
 ## Structure
 
@@ -37,17 +42,14 @@ Or via just:
 ├── plugin.yaml          # Plugin manifest (name, version, hooks)
 ├── __init__.py          # Plugin entry — register() + hook callbacks
 ├── AGENTS.md            # This file
-├── src/
-│   └── subagent_output_guide/
-│       ├── __init__.py
-│       ├── tracker.py   # Child-session tracking
-│       └── guidance.py  # Context-building for the injected guidance
 ├── tests/
 │   ├── __init__.py
 │   ├── test_tracker.py
-│   └── test_guidance.py
+│   ├── test_guidance.py
+│   └── test_registration.py
 ├── pyproject.toml       # Project metadata, dependencies, tool config
-└── justfile             # Task runner (verify, test, lint)
+├── justfile             # Task runner (verify, test, lint)
+└── .gitignore
 ```
 
 ## Python toolchain
@@ -56,16 +58,20 @@ Or via just:
 - **uv** for package management (not pip)
 - **ruff** for linting and formatting
 - **`ty`** for static type checking
+- **bandit** for security scanning
+- **vulture** for dead code detection
 - **pytest** for testing
 
 ## Workflow
 
 All code changes must pass:
 
-    ruff check .          # Lint
-    ruff format --check . # Format check
-    ty src/ tests/        # Type check
-    pytest                # Unit tests
+    uv run ruff check .          # Lint
+    uv run ruff format --check . # Format check
+    uv run bandit -r __init__.py tests/ -c pyproject.toml  # Security scan
+    uv run vulture . .vulture_whitelist.py --exclude '.venv,dist,.git,__pycache__'  # Dead code
+    uv run ty check . --exclude .vulture_whitelist.py  # Type check
+    uv run pytest                # Unit tests
 
 ## Git conventions
 

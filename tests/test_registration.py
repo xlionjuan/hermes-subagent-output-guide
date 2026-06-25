@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import importlib.util
-import os
+from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
@@ -11,7 +11,7 @@ import pytest
 # ---------------------------------------------------------------------------
 # Load the plugin module
 # ---------------------------------------------------------------------------
-_PLUGIN_PATH = os.path.expanduser("~/.hermes/plugins/subagent-output-guide/__init__.py")
+_PLUGIN_PATH = str(Path(__file__).resolve().parent.parent / "__init__.py")
 
 
 @pytest.fixture(autouse=True)

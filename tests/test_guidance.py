@@ -3,14 +3,14 @@
 from __future__ import annotations
 
 import importlib.util
-import os
+from pathlib import Path
 
 import pytest
 
 # ---------------------------------------------------------------------------
 # Load the plugin module
 # ---------------------------------------------------------------------------
-_PLUGIN_PATH = os.path.expanduser("~/.hermes/plugins/subagent-output-guide/__init__.py")
+_PLUGIN_PATH = str(Path(__file__).resolve().parent.parent / "__init__.py")
 
 
 @pytest.fixture(autouse=True)
@@ -95,7 +95,7 @@ class TestPreLlmCall:
             session_id="child-1",
             is_first_turn=True,
         )
-        assert "/tmp/" in result
+        assert "/tmp/" in result  # nosec - intentional: verifying guidance content
         assert "output" in result.lower()
 
     def test_guidance_has_boundary_markers(self, _plugin):

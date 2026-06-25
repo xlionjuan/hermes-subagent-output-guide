@@ -3,15 +3,15 @@
 from __future__ import annotations
 
 import importlib.util
-import os
 import threading
+from pathlib import Path
 
 import pytest
 
 # ---------------------------------------------------------------------------
 # Load the plugin module from its __init__.py file path
 # ---------------------------------------------------------------------------
-_PLUGIN_PATH = os.path.expanduser("~/.hermes/plugins/subagent-output-guide/__init__.py")
+_PLUGIN_PATH = str(Path(__file__).resolve().parent.parent / "__init__.py")
 
 
 @pytest.fixture(autouse=True)
