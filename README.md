@@ -46,3 +46,25 @@ hermes plugins enable hermes-subagent-output-guide
 ```
 
 Takes effect after a gateway restart (`/restart` or restart the Hermes gateway service).
+
+## Using in other profiles
+
+To make this plugin available in another Hermes profile, create a symlink
+under that profile's `plugins/` directory:
+
+```bash
+mkdir -p ~/.hermes/profiles/<profile>/plugins
+ln -s ../../../plugins/hermes-subagent-output-guide \
+    ~/.hermes/profiles/<profile>/plugins/hermes-subagent-output-guide
+```
+
+Then enable it from that profile:
+
+```bash
+hermes plugins --profile <profile> enable hermes-subagent-output-guide
+```
+
+> **Note:** The symlink target `../../../plugins/hermes-subagent-output-guide`
+> is relative and resolves from `~/.hermes/profiles/<profile>/plugins/` back
+> to the canonical install at `~/.hermes/plugins/`. This keeps a single copy
+> of the plugin shared across profiles.
