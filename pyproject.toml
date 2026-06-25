@@ -32,11 +32,11 @@ pythonpath = ["."]
 
 [dependency-groups]
 dev = [
-    "ruff>=0.6.0",
-    "pytest>=8.0",
-    "ty>=0.0.49",
-    "bandit>=1.7",
-    "vulture>=2.7",
+    "ruff==0.15.19",
+    "pytest==9.1.1",
+    "ty==0.0.53",
+    "bandit==1.9.4",
+    "vulture==2.16",
 ]
 
 [tool.bandit]

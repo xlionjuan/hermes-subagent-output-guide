@@ -19,12 +19,7 @@ def _load_plugin(module_name: str):
     return mod
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def plugin():
     """Import the plugin module with clean state before each test."""
     return _load_plugin("subagent_output_guide_test")
-
-
-def make_child(plugin, session_id: str = "child-1") -> None:
-    """Register *session_id* as a known child session."""
-    plugin._on_subagent_start(child_session_id=session_id)

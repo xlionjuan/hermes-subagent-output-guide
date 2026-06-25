@@ -52,6 +52,35 @@ class TestSubagentStart:
         assert "session-xyz" in plugin._child_sessions
 
 
+class TestConcurrency:
+    """Stress tests for concurrent access to _child_sessions."""
+
+    def test_concurrent_subagent_start_and_pre_llm_call(self, plugin):
+        """Concurrent registration and reads do not lose data."""
+        ids = [f"stress-{i}" for i in range(50)]
+        errors: list[Exception | None] = [None] * len(ids)
+
+        def register_then_read(idx: int) -> None:
+            try:
+                sid = ids[idx]
+                plugin._on_subagent_start(child_session_id=sid)
+                # Immediately try to read it back
+                result = plugin._on_pre_llm_call(session_id=sid, is_first_turn=True)
+                assert result is not None
+                assert "/tmp/" in result  # nosec B108
+            except Exception as e:
+                errors[idx] = e
+
+        threads = [threading.Thread(target=register_then_read, args=(i,)) for i in range(len(ids))]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        failures = [(i, e) for i, e in enumerate(errors) if e is not None]
+        assert not failures, f"Concurrent read/write failures: {failures}"
+
+
 class TestSessionEnd:
     def test_on_session_end_removes_child_id(self, plugin):
         """on_session_end removes the session_id from _child_sessions."""

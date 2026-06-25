@@ -26,10 +26,18 @@ class TestRegister:
         hook_names = [call.args[0] for call in ctx.register_hook.call_args_list]
         assert "pre_llm_call" in hook_names
 
+    def test_register_on_session_end_hook(self, plugin):
+        """One of the registrations is for the 'on_session_end' hook."""
+        ctx = MagicMock()
+        plugin.register(ctx)
+        hook_names = [call.args[0] for call in ctx.register_hook.call_args_list]
+        assert "on_session_end" in hook_names
+
     def test_register_with_correct_callbacks(self, plugin):
         """The callbacks registered match the expected internal functions."""
         ctx = MagicMock()
         plugin.register(ctx)
         names_and_funcs = {call.args[0]: call.args[1] for call in ctx.register_hook.call_args_list}
         assert names_and_funcs["subagent_start"] is plugin._on_subagent_start
+        assert names_and_funcs["on_session_end"] is plugin._on_session_end
         assert names_and_funcs["pre_llm_call"] is plugin._on_pre_llm_call
