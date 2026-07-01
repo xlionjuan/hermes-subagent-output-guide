@@ -6,12 +6,14 @@ when the parent agent (Kuri) forgets to specify an output path.
 
 ## How it works
 
-Two hooks working together:
+Three hooks working together:
 
 1. `subagent_start` — records `child_session_id` as belonging to a child agent
 2. `pre_llm_call` — checks if the current `session_id` is a known child session.
    If so, and it's the first turn, injects a context block into the user message
    telling the subagent to write to `/tmp/` when no output path is specified.
+3. `on_session_end` — cleans up the tracked child session when it ends, keeping
+   the plugin's process memory free from stale entries.
 
 ## Verification
 
