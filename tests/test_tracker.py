@@ -77,6 +77,33 @@ class TestSubagentStart:
         assert info.child_role is None
         assert info.child_goal == ""
 
+    def test_repeated_child_session_id_overwrites(self, plugin):
+        """Calling _on_subagent_start twice with the same ID silently overwrites
+        (not an error or duplicate entry)."""
+        plugin._on_subagent_start(
+            child_session_id="dup-session",
+            child_role="first",
+            child_goal="initial goal",
+            parent_session_id="parent-1",
+            parent_turn_id="turn-1",
+        )
+        # Second call with the same ID but different metadata
+        plugin._on_subagent_start(
+            child_session_id="dup-session",
+            child_role="second",
+            child_goal="overwritten goal",
+        )
+        # Only one entry exists (no duplicates)
+        assert len(plugin._child_sessions) == 1
+        info = plugin._child_sessions["dup-session"]
+        # Metadata should reflect the second (latest) call
+        assert info.child_role == "second"
+        assert info.child_goal == "overwritten goal"
+        # parent_session_id from the first call was overwritten:
+        # second call omitted it, so it defaults to ""
+        assert info.parent_session_id == ""
+        assert info.parent_turn_id == ""
+
 
 class TestConcurrency:
     """Stress tests for concurrent access to _child_sessions."""
