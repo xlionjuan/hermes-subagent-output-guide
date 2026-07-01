@@ -23,12 +23,12 @@ Two hooks working together:
 
 Run before every commit:
 
-    uv run ruff check .
-    uv run ruff format --check .
-    uv run bandit -r . -c pyproject.toml
-    uv run vulture . --exclude '.venv,dist,.git,__pycache__'
-    uv run ty check .
-    uv run pytest
+    uv run ruff check .          # Lint
+    uv run ruff format --check . # Format check
+    uv run bandit -r __init__.py tests/ -c pyproject.toml  # Security scan
+    uv run vulture . .vulture_whitelist.py --exclude '.venv,dist,.git,__pycache__'  # Dead code
+    uv run ty check . --exclude .vulture_whitelist.py  # Type check
+    uv run pytest                # Unit tests
 
 Or via just:
 
@@ -47,14 +47,17 @@ Or via just:
 │   ├── test_tracker.py
 │   ├── test_guidance.py
 │   └── test_registration.py
+├── .gitignore
+├── .vulture_whitelist.py
+├── .github/
+│   └── workflows/
 ├── pyproject.toml       # Project metadata, dependencies, tool config
 ├── justfile             # Task runner (verify, test, lint)
-└── .gitignore
 ```
 
 ## Python toolchain
 
-- **Python 3.12+** (same as Hermes)
+- **Python 3.11** (>=3.11, <3.12)
 - **uv** for package management (not pip)
 - **ruff** for linting and formatting
 - **`ty`** for static type checking
