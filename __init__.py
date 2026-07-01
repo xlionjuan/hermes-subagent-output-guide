@@ -95,6 +95,6 @@ def _on_pre_llm_call(
 # ---------------------------------------------------------------------------
 
 
-def register(ctx) -> None:
+def register(ctx: Any) -> None:
     ctx.register_hook("subagent_start", _on_subagent_start)
     ctx.register_hook("pre_llm_call", _on_pre_llm_call)
