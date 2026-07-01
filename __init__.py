@@ -1,13 +1,15 @@
 """
 subagent-output-guide plugin — injects output-location guidance into subagents.
 
-Wires two hooks:
+Wires three hooks:
 
 1. ``subagent_start`` — records ``child_session_id`` as a child-agent session
    so subsequent ``pre_llm_call`` invocations can recognise it.
 2. ``pre_llm_call`` — when the current session is a child agent on its first
    turn, returns a context block telling it to write output files to ``/tmp/``
    when the task doesn't specify a location.
+3. ``on_session_end`` — cleans up the tracked child session when it ends,
+   keeping the plugin's process memory free from stale entries.
 """
 
 from __future__ import annotations
