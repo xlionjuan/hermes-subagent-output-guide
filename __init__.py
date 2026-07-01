@@ -1,30 +1,50 @@
-"""
-subagent-output-guide plugin — injects output-location guidance into subagents.
+"""subagent-output-guide plugin — injects output-location guidance into subagents.
 
 Wires three hooks:
 
-1. ``subagent_start`` — records ``child_session_id`` as a child-agent session
-   so subsequent ``pre_llm_call`` invocations can recognise it.
+1. ``subagent_start`` — records ``child_session_id`` (with parent relationship)
+   as a child-agent session so subsequent ``pre_llm_call`` invocations can
+   recognise it.
 2. ``pre_llm_call`` — when the current session is a child agent on its first
    turn, returns a context block telling it to write output files to ``/tmp/``
    when the task doesn't specify a location.
-3. ``on_session_end`` — cleans up the tracked child session when it ends,
-   keeping the plugin's process memory free from stale entries.
+3. ``on_session_end`` — cleans up the tracked child session when it ends and
+   performs cascade cleanup: if the ending session is a parent, all its
+   children are removed as well.
 """
 
 from __future__ import annotations
 
 import logging
 import threading
+from dataclasses import dataclass
 from typing import Any
 
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
-# Global state: set of session IDs known to be child (subagent) sessions.
+# ChildInfo dataclass — metadata for a child (subagent) session.
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class ChildInfo:
+    """Metadata about a child (subagent) session and its parent relationship."""
+
+    parent_session_id: str
+    parent_turn_id: str
+    child_session_id: str
+    child_role: str | None = None
+    child_goal: str = ""
+
+
+# ---------------------------------------------------------------------------
+# Global state: child_session_id → ChildInfo mapping.
+# Dict instead of set so we can track parent→children relationships and
+# cascade-cleanup when a parent session ends.
 # Thread-safe because subagent_start and pre_llm_call can fire concurrently.
 # ---------------------------------------------------------------------------
-_child_sessions: set[str] = set()
+_child_sessions: dict[str, ChildInfo] = {}
 _lock = threading.Lock()
 
 
@@ -37,16 +57,25 @@ def _on_subagent_start(
     child_session_id: str | None = None,
     child_role: str | None = None,
     child_goal: str = "",
+    parent_session_id: str | None = None,
+    parent_turn_id: str = "",
     **_: Any,
 ) -> None:
-    """Record ``child_session_id`` as a child-agent session."""
+    """Record ``child_session_id`` (with parent relation) as a child-agent session."""
     if child_session_id:
         with _lock:
-            _child_sessions.add(child_session_id)
+            _child_sessions[child_session_id] = ChildInfo(
+                parent_session_id=parent_session_id or "",
+                parent_turn_id=parent_turn_id,
+                child_session_id=child_session_id,
+                child_role=child_role,
+                child_goal=child_goal,
+            )
         logger.debug(
-            "subagent-output-guide: tracking child session %s (role=%s)",
+            "subagent-output-guide: tracking child session %s (role=%s, parent=%s)",
             child_session_id,
             child_role,
+            parent_session_id,
         )
 
 
@@ -54,10 +83,28 @@ def _on_session_end(
     session_id: str = "",
     **_: Any,
 ) -> None:
-    """Clean up child session tracking when a session ends."""
-    if session_id:
-        with _lock:
-            _child_sessions.discard(session_id)
+    """Clean up child session tracking when a session ends.
+
+    Performs cascade cleanup: if the ending session is a parent, all its
+    children are removed as well.
+    """
+    if not session_id:
+        return
+    with _lock:
+        # Remove self if tracked as a child
+        _child_sessions.pop(session_id, None)
+        # Cascade: remove all children whose parent is this session
+        orphaned = [
+            cid for cid, info in _child_sessions.items() if info.parent_session_id == session_id
+        ]
+        for cid in orphaned:
+            _child_sessions.pop(cid, None)
+        if orphaned:
+            logger.info(
+                "subagent-output-guide: cascade cleanup removed %d orphaned children of session %s",
+                len(orphaned),
+                session_id,
+            )
 
 
 def _on_pre_llm_call(

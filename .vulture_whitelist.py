@@ -4,4 +4,3 @@
 
 _on_subagent_start  # unused function reference (register() wires it)
 _on_pre_llm_call  # unused function reference (register() wires it)
-child_goal  # accepted via named param, forwarded to **_; intentionally unused

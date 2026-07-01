@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib.util
+import sys
 from pathlib import Path
 
 import pytest
@@ -11,10 +12,16 @@ _PLUGIN_PATH = str(Path(__file__).resolve().parent.parent / "__init__.py")
 
 
 def _load_plugin(module_name: str):
-    """Import the plugin module and return it with clean state."""
+    """Import the plugin module and return it with clean state.
+
+    Registers the module in sys.modules so that ``@dataclass`` and other
+    decorators that resolve string annotations (PEP 563) can find the
+    module's namespace.
+    """
     spec = importlib.util.spec_from_file_location(module_name, _PLUGIN_PATH)
     assert spec is not None and spec.loader is not None
     mod = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = mod
     spec.loader.exec_module(mod)
     return mod
 
