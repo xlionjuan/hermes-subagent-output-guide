@@ -149,3 +149,14 @@ class TestSessionEnd:
         """on_session_end does nothing for an untracked session_id."""
         plugin._on_session_end(session_id="never-tracked")
         assert len(plugin._child_sessions) == 0
+
+    def test_on_session_end_empty_string_noop(self, plugin):
+        """on_session_end(session_id=\"\") is a no-op — does not remove
+        any registered child session because the guard ``if session_id:``
+        prevents an empty string from entering the critical section."""
+        # Register a real child session first
+        plugin._on_subagent_start(child_session_id="real-child")
+        assert "real-child" in plugin._child_sessions
+        # Calling on_session_end with an empty string must NOT remove it
+        plugin._on_session_end(session_id="")
+        assert "real-child" in plugin._child_sessions
