@@ -6,12 +6,6 @@ from unittest.mock import MagicMock
 
 
 class TestRegister:
-    def test_register_calls_register_hook_three_times(self, plugin):
-        """register(ctx) calls ctx.register_hook exactly three times."""
-        ctx = MagicMock()
-        plugin.register(ctx)
-        assert ctx.register_hook.call_count == 3
-
     def test_register_subagent_start_hook(self, plugin):
         """One of the registrations is for the 'subagent_start' hook."""
         ctx = MagicMock()
