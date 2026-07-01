@@ -48,6 +48,16 @@ def _on_subagent_start(
         )
 
 
+def _on_session_end(
+    session_id: str = "",
+    **_: Any,
+) -> None:
+    """Clean up child session tracking when a session ends."""
+    if session_id:
+        with _lock:
+            _child_sessions.discard(session_id)
+
+
 def _on_pre_llm_call(
     session_id: str = "",
     is_first_turn: bool = False,
@@ -74,18 +84,23 @@ def _on_pre_llm_call(
     )
     return (
         "<subagent-output-guide>\n"
-        "Parent task instructions take priority. Use this only as a "
-        "fallback when the parent does not specify output details. "
-        "If you create files, use the parent-specified path when given; "
-        "otherwise use /tmp/. Use descriptive filenames and mention "
-        "created file paths in your response. For large reports, write "
-        "the full content to /tmp/; do not include the full report in "
-        "the response. For temporary artifacts (coverage, logs, scripts, "
-        "tables, generated data, debug output, etc.), save them under "
-        "/tmp/ when useful. Reply with the key findings, decisions, or "
-        "next steps, plus the file paths. If the task needs substantial "
-        "output but you lack file tools, say so neutrally so the parent "
-        "can add them next time for review.\n"
+        "\n"
+        "## File Output Location\n"
+        "\n"
+        "This guidance only applies if your delegated task requires you "
+        "to create output files. It does not require you to create a "
+        "file. If the task can be completed by replying in chat, reply "
+        "in chat.\n"
+        "\n"
+        "If you do create output files:\n"
+        "\n"
+        "- If the task **explicitly specifies** an output location, use "
+        "that location.\n"
+        "- If **no output location is specified**, write output files "
+        "to ``/tmp/``.\n"
+        "- Do not write output files to the home directory, project "
+        "root, or other locations unless explicitly directed.\n"
+        "\n"
         "</subagent-output-guide>\n"
     )
 
@@ -97,4 +112,5 @@ def _on_pre_llm_call(
 
 def register(ctx: Any) -> None:
     ctx.register_hook("subagent_start", _on_subagent_start)
+    ctx.register_hook("on_session_end", _on_session_end)
     ctx.register_hook("pre_llm_call", _on_pre_llm_call)

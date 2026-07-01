@@ -79,3 +79,17 @@ class TestConcurrency:
 
         failures = [(i, e) for i, e in enumerate(errors) if e is not None]
         assert not failures, f"Concurrent read/write failures: {failures}"
+
+
+class TestSessionEnd:
+    def test_on_session_end_removes_child_id(self, plugin):
+        """on_session_end removes the session_id from _child_sessions."""
+        plugin._on_subagent_start(child_session_id="session-to-clean")
+        assert "session-to-clean" in plugin._child_sessions
+        plugin._on_session_end(session_id="session-to-clean")
+        assert "session-to-clean" not in plugin._child_sessions
+
+    def test_on_session_end_noop_for_unknown_id(self, plugin):
+        """on_session_end does nothing for an untracked session_id."""
+        plugin._on_session_end(session_id="never-tracked")
+        assert len(plugin._child_sessions) == 0

@@ -5,3 +5,4 @@ author: "Shihfu Juan / Kuri"
 hooks:
   - subagent_start
   - pre_llm_call
+  - on_session_end
