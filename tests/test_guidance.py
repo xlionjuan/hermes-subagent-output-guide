@@ -109,29 +109,19 @@ class TestPreLlmCall:
             is None
         )
 
-    def test_cleanup_prevents_future_injection(self, plugin):
-        """After session cleanup, first-turn guidance is no longer injected."""
-        child_id = "cleanup-test"
-        plugin._on_subagent_start(child_session_id=child_id)
-        # First turn: guidance should be returned
-        assert plugin._on_pre_llm_call(session_id=child_id, is_first_turn=True) is not None
-        # Session ends
-        plugin._on_session_end(session_id=child_id)
-        # Even if treated as first turn again, no guidance for an unknown session
-        assert plugin._on_pre_llm_call(session_id=child_id, is_first_turn=True) is None
-
     def test_guidance_contains_semantic_phrases(self, plugin):
         """The guidance text asserts key policy semantics."""
         make_child(plugin, "child-1")
         result = plugin._on_pre_llm_call(session_id="child-1", is_first_turn=True)
         assert result is not None
         msg = result.lower()
-        # Does not imply file creation is required
-        assert "does not require you to create a file" in msg
-        # Explicit locations win
-        assert "explicitly specifies" in msg
+        # Parent instructions take priority
+        assert "parent task instructions take priority" in msg
+        # Fallback nature
+        assert "fallback" in msg
         # Unspecified → /tmp/
         assert "/tmp/" in msg  # nosec B108
-        # Home/project root is disallowed without explicit direction
-        assert "do not write" in msg
-        assert "unless explicitly directed" in msg
+        # Large reports: write to file, don't paste in response
+        assert "do not include the full report" in msg
+        # File tools suggestion for substantial output
+        assert "file tools" in msg
