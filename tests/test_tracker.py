@@ -80,6 +80,62 @@ class TestConcurrency:
         failures = [(i, e) for i, e in enumerate(errors) if e is not None]
         assert not failures, f"Concurrent read/write failures: {failures}"
 
+    def test_concurrent_subagent_start_and_session_end(self, plugin):
+        """Concurrent add+remove of distinct IDs: _child_sessions ends empty
+        and pre_llm_call returns None for all previously-removed IDs."""
+        ids = [f"addrm-{i}" for i in range(50)]
+        errors: list[Exception | None] = [None] * len(ids)
+
+        def add_then_remove(idx: int) -> None:
+            try:
+                sid = ids[idx]
+                # Add the session (subagent_start)
+                plugin._on_subagent_start(child_session_id=sid)
+                # Immediately remove it (on_session_end)
+                plugin._on_session_end(session_id=sid)
+                # After removal, pre_llm_call must return None
+                assert plugin._on_pre_llm_call(session_id=sid, is_first_turn=True) is None
+            except Exception as e:
+                errors[idx] = e
+
+        threads = [threading.Thread(target=add_then_remove, args=(i,)) for i in range(len(ids))]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        failures = [(i, e) for i, e in enumerate(errors) if e is not None]
+        assert not failures, f"Concurrent add/remove failures: {failures}"
+        # All IDs must have been removed
+        assert len(plugin._child_sessions) == 0
+
+    def test_concurrent_session_end_on_same_id(self, plugin):
+        """Multiple threads calling on_session_end on the same ID must not
+        crash — discard is idempotent under the lock."""
+        sid = "contested-session"
+        # Register it once
+        plugin._on_subagent_start(child_session_id=sid)
+        assert sid in plugin._child_sessions
+
+        errors: list[Exception | None] = [None] * 20
+
+        def remove_same_id(idx: int) -> None:
+            try:
+                plugin._on_session_end(session_id=sid)
+            except Exception as e:
+                errors[idx] = e
+
+        threads = [threading.Thread(target=remove_same_id, args=(i,)) for i in range(20)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        failures = [(i, e) for i, e in enumerate(errors) if e is not None]
+        assert not failures, f"Concurrent discard on same ID crashed: {failures}"
+        # After all threads, the ID must be gone (discard succeeded)
+        assert sid not in plugin._child_sessions
+
 
 class TestSessionEnd:
     def test_on_session_end_removes_child_id(self, plugin):
