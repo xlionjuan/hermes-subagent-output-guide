@@ -10,7 +10,7 @@ Wires three hooks:
    when the task doesn't specify a location.
 3. ``on_session_end`` — cleans up the tracked child session when it ends and
    performs cascade cleanup: if the ending session is a parent, all its
-   children are removed as well.
+   descendants are removed as well (recursive BFS walk).
 """
 
 from __future__ import annotations
@@ -85,26 +85,22 @@ def _on_session_end(
 ) -> None:
     """Clean up child session tracking when a session ends.
 
-    Performs cascade cleanup: if the ending session is a parent, all its
-    children are removed as well.
+    Performs recursive cascade cleanup via BFS walk: if the ending session
+    has descendants (children, grandchildren, etc.), they are all removed.
     """
     if not session_id:
         return
     with _lock:
-        # Remove self if tracked as a child
-        _child_sessions.pop(session_id, None)
-        # Cascade: remove all children whose parent is this session
-        orphaned = [
-            cid for cid, info in _child_sessions.items() if info.parent_session_id == session_id
-        ]
-        for cid in orphaned:
-            _child_sessions.pop(cid, None)
-        if orphaned:
-            logger.info(
-                "subagent-output-guide: cascade cleanup removed %d orphaned children of session %s",
-                len(orphaned),
-                session_id,
-            )
+        removed = {session_id}
+        frontier = [session_id]
+        while frontier:
+            direct = [
+                cid for cid, info in _child_sessions.items() if info.parent_session_id in frontier
+            ]
+            removed.update(direct)
+            frontier = direct
+        for sid in removed:
+            _child_sessions.pop(sid, None)
 
 
 def _on_pre_llm_call(

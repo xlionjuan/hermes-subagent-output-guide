@@ -286,3 +286,27 @@ class TestCascadeCleanup:
         assert "child-to-keep" in plugin._child_sessions
         assert plugin._on_pre_llm_call(session_id="child-to-keep", is_first_turn=True) is not None
         assert plugin._on_pre_llm_call(session_id="child-to-clean", is_first_turn=True) is None
+
+    def test_cascade_grandparent_removes_all_descendants(self, plugin):
+        """Ending a grandparent removes the entire subtree (parent + child)."""
+        plugin._on_subagent_start(
+            child_session_id="grandparent-session",
+        )
+        plugin._on_subagent_start(
+            child_session_id="parent-session",
+            parent_session_id="grandparent-session",
+        )
+        plugin._on_subagent_start(
+            child_session_id="child-session",
+            parent_session_id="parent-session",
+        )
+        assert "grandparent-session" in plugin._child_sessions
+        assert "parent-session" in plugin._child_sessions
+        assert "child-session" in plugin._child_sessions
+
+        # End grandparent — should cascade-remove parent AND child
+        plugin._on_session_end(session_id="grandparent-session")
+
+        assert "grandparent-session" not in plugin._child_sessions
+        assert "parent-session" not in plugin._child_sessions
+        assert "child-session" not in plugin._child_sessions
