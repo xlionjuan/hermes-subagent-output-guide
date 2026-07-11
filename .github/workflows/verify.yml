@@ -28,7 +28,7 @@ jobs:
         uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
 
       - name: Install just
-        uses: taiki-e/install-action@50414676f9f5d50a65992c6dd2ed02641263226c # v2.82.10
+        uses: taiki-e/install-action@5ebac0d9522d786674368e47e92963ba13f2c376 # v2.82.11
         with:
           tool: just@1.51.0
           fallback: none
