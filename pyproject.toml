@@ -1,7 +1,7 @@
 [project]
 name = "hermes-subagent-output-guide"
 version = "0.1.0"
-description = "Injects output-location guidance into subagent prompts"
+description = "Injects text-report delivery guidance into subagent prompts"
 requires-python = ">=3.11, <3.12"
 
 [tool.ruff]

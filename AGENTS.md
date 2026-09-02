@@ -1,8 +1,8 @@
 # subagent-output-guide
 
-A Hermes user plugin that automatically injects output-location guidance into
-subagent prompts, preventing subagents from writing files to arbitrary locations
-when the parent agent (Kuri) forgets to specify an output path.
+A Hermes user plugin that automatically injects text-report delivery guidance
+into subagent prompts. Concise reports stay in the response; long reports use a
+specified location or `/tmp/`.
 
 ## How it works
 
@@ -11,7 +11,8 @@ Three hooks working together:
 1. `subagent_start` — records `child_session_id` as belonging to a child agent
 2. `pre_llm_call` — checks if the current `session_id` is a known child session.
    If so, and it's the first turn, injects a context block into the user message
-   telling the subagent to write to `/tmp/` when no output path is specified.
+   that keeps concise reports in the response and saves long text reports under
+   `/tmp/` when no report location is specified.
 3. `on_session_end` — cleans up the tracked child session when it ends, keeping
    the plugin's process memory free from stale entries.
 

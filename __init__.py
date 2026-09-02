@@ -1,4 +1,4 @@
-"""subagent-output-guide plugin — injects output-location guidance into subagents.
+"""subagent-output-guide plugin — injects text-report delivery guidance into subagents.
 
 Wires three hooks:
 
@@ -6,8 +6,8 @@ Wires three hooks:
    as a child-agent session so subsequent ``pre_llm_call`` invocations can
    recognise it.
 2. ``pre_llm_call`` — when the current session is a child agent on its first
-   turn, returns a context block telling it to write output files to ``/tmp/``
-   when the task doesn't specify a location.
+   turn, returns a context block that keeps concise reports in the response
+   and saves long text reports under ``/tmp/`` when no location is specified.
 3. ``on_session_end`` — cleans up the tracked child session when it ends and
    performs cascade cleanup: if the ending session is a parent, all its
    descendants are removed as well (recursive BFS walk).
@@ -108,7 +108,7 @@ def _on_pre_llm_call(
     is_first_turn: bool = False,
     **_: Any,
 ) -> str | None:
-    """Inject output-location guidance on the child's first turn.
+    """Inject text-report delivery guidance on the child's first turn.
 
     Returns a plain-string context block that gets appended to the current
     user message (never touches the system prompt — preserves prompt cache).
@@ -130,21 +130,24 @@ def _on_pre_llm_call(
     return (
         "<subagent-output-guide>\n"
         "\n"
-        "## File Output Location\n"
+        "## Text Report Delivery\n"
         "\n"
-        "This guidance only applies if your delegated task requires you "
-        "to create output files. It does not require you to create a "
-        "file. If the task can be completed by replying in chat, reply "
-        "in chat.\n"
+        "This guidance applies only to text reports. It does not apply "
+        "to source code, tests, project documentation, scripts, data, "
+        "logs, build outputs, or any other non-report files.\n"
         "\n"
-        "If you do create output files:\n"
+        "Follow any explicit delivery instructions in the delegated task.\n"
         "\n"
-        "- If the task **explicitly specifies** an output location, use "
-        "that location.\n"
-        "- If **no output location is specified**, write output files "
-        "to ``/tmp/``.\n"
-        "- Do not write output files to the home directory, project "
-        "root, or other locations unless explicitly directed.\n"
+        "- For a concise report, respond directly unless the task "
+        "requests a file.\n"
+        "- If the report would make the final response long, proactively "
+        "save the detailed report to a text file instead of placing most "
+        "of it in the final response.\n"
+        "- Use the report location specified by the delegated task. If "
+        "none is specified, save the report under ``/tmp/``.\n"
+        "- When a report file is created, keep the final response concise "
+        "and include the key findings, decisions, or next steps together "
+        "with the report's absolute path.\n"
         "\n"
         "</subagent-output-guide>\n"
     )

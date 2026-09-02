@@ -47,15 +47,15 @@ class TestPreLlmCall:
             is None
         )
 
-    def test_guidance_mentions_output_location(self, plugin):
-        """The returned guidance mentions /tmp/ and output location concepts."""
+    def test_guidance_mentions_report_location(self, plugin):
+        """The returned guidance mentions /tmp/ and text report concepts."""
         make_child(plugin, "child-1")
         result = plugin._on_pre_llm_call(
             session_id="child-1",
             is_first_turn=True,
         )
         assert "/tmp/" in result  # nosec B108
-        assert "output" in result.lower()
+        assert "text report" in result.lower()
 
     def test_guidance_has_boundary_markers(self, plugin):
         """The guidance has both <subagent-output-guide> and </subagent-output-guide> markers."""
@@ -126,12 +126,18 @@ class TestPreLlmCall:
         result = plugin._on_pre_llm_call(session_id="child-1", is_first_turn=True)
         assert result is not None
         msg = result.lower()
-        # Does not imply file creation is required
-        assert "does not require you to create a file" in msg
-        # Explicit locations win
-        assert "explicitly specifies" in msg
-        # Unspecified → /tmp/
+        # Applies only to text reports, not project files or other artifacts
+        assert "applies only to text reports" in msg
+        assert "does not apply to source code" in msg
+        # Explicit delivery instructions take priority
+        assert "follow any explicit delivery instructions" in msg
+        # Concise reports can stay in the response
+        assert "for a concise report, respond directly" in msg
+        # Long reports are proactively moved out of the final response
+        assert "proactively save the detailed report" in msg
+        assert "placing most of it in the final response" in msg
+        # Unspecified report path → /tmp/
         assert "/tmp/" in msg  # nosec B108
-        # Home/project root is disallowed without explicit direction
-        assert "do not write" in msg
-        assert "unless explicitly directed" in msg
+        # The final response preserves useful context and the absolute path
+        assert "key findings, decisions, or next steps" in msg
+        assert "absolute path" in msg
