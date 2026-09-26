@@ -2,7 +2,7 @@
 name = "hermes-subagent-output-guide"
 version = "0.1.0"
 description = "Injects text-report delivery guidance into subagent prompts"
-requires-python = ">=3.11, <3.12"
+requires-python = ">=3.11"
 
 [tool.ruff]
 line-length = 100
@@ -32,9 +32,9 @@ pythonpath = ["."]
 
 [dependency-groups]
 dev = [
-    "ruff==0.15.19",
+    "ruff>=0.15",
     "pytest==9.1.1",
-    "ty==0.0.53",
+    "ty>=0.0.53",
     "bandit==1.9.4",
     "vulture==2.16",
 ]
