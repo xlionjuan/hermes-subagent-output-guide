@@ -33,7 +33,7 @@ pythonpath = ["."]
 [dependency-groups]
 dev = [
     "ruff>=0.15",
-    "pytest==9.1.1",
+    "pytest==9.2.0",
     "ty>=0.0.53",
     "bandit==1.9.4",
     "vulture==2.16",
